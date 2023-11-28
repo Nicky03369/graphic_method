@@ -8,7 +8,7 @@ class Vista:
     def __init__(self, root):
         self.modelo = Graphicmethod()
         self.root = root
-        self.root.title("Aplicación MVC")
+        self.root.title("Metodo Grafico")
         self.root.geometry("400x600")  # Establece el tamaño de la ventana a 400x300 píxeles
         self.label_funcobj = tk.Label(root, text="Ingrese la Funcion Objetivo Z=")
         self.label_funcobj.pack()
@@ -107,10 +107,10 @@ class Vista:
         else:
             # Agregar los valores a la tabla
             constraint = {
-                "Coeff A": float(coeff_a),
-                "Coeff B": float(coeff_b),
+                "X": float(coeff_a),
+                "Y": float(coeff_b),
                 "Equal": equal,
-                "Coeff C": float(coeff_c)
+                "C": float(coeff_c)
             }
             self.constraint_list.append(constraint)
             self.tree.insert("", "end", values=(coeff_a, coeff_b, equal, coeff_c))
@@ -136,13 +136,13 @@ class Vista:
 
     def get_objective_func(self):
         objective = self.objective_var.get()
-        coeff_a = self.txtfield_a.get()
-        coeff_b = self.txtfield_b.get()
+        coeff_a = int(self.txtfield_a.get())
+        coeff_b = int(self.txtfield_b.get())
         sign = self.sign.get()
         func_obj = {
             "Objective": objective,
-            "Coeff A": coeff_a,
-            "Coeff B": coeff_b,
+            "X": coeff_a,
+            "Y": coeff_b,
             "Sign": sign
         }
         return func_obj
@@ -156,9 +156,9 @@ class Vista:
         x, y = self.modelo.get_x_y()
         intersections = self.modelo.get_intersections()
         for constraint in self.constraint_list:
-            coeff_a = constraint["Coeff A"]
-            coeff_b = constraint["Coeff B"]
-            coeff_c = constraint["Coeff C"]
+            coeff_a = constraint["X"]
+            coeff_b = constraint["Y"]
+            coeff_c = constraint["C"]
             equal = constraint["Equal"]
 
             if coeff_b == 0:
@@ -179,6 +179,20 @@ class Vista:
         plt.legend()
 
         plt.grid(True)
+        self.show_solved_window()
         plt.show()
 
 
+    def get_max_min_selection(self):
+        selected_value = self.objective_var.get()
+        if selected_value == 'maximize':
+            return selected_value
+        elif selected_value == 'minimize':
+            return selected_value
+
+    def show_solved_window(self):
+        resolved_window = tk.Toplevel(self.root)
+        option = self.get_max_min_selection()
+        message = self.modelo.find_solution(option, self.get_objective_func(), self.constraint_list)
+        resolved_label = tk.Label(resolved_window, text=message)
+        resolved_label.pack()

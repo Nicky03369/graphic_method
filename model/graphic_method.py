@@ -1,3 +1,6 @@
+from pulp import *
+
+
 class Graphicmethod:
     def __init__(self):
         self.x = []
@@ -10,9 +13,9 @@ class Graphicmethod:
 
     def find_points(self, constraints):
         for constraint in constraints:
-            coeff_a = constraint["Coeff A"]
-            coeff_b = constraint["Coeff B"]
-            coeff_c = constraint["Coeff C"]
+            coeff_a = constraint["X"]
+            coeff_b = constraint["Y"]
+            coeff_c = constraint["C"]
 
             if coeff_a == 0:
                 y_val = coeff_c / coeff_b
@@ -29,20 +32,16 @@ class Graphicmethod:
                 y2 = 0
                 self.x.extend([x1, x2])
                 self.y.extend([y1, y2])
-        print('desde el modelo')
-        print(self.x)
-        print(self.y)
-        print('desde el modelo')
 
     def find_intersections(self, constraints):
         for i in range(len(constraints)):
             for j in range(i + 1, len(constraints)):
-                A1 = constraints[i]["Coeff A"]
-                B1 = constraints[i]["Coeff B"]
-                C1 = constraints[i]["Coeff C"]
-                A2 = constraints[j]["Coeff A"]
-                B2 = constraints[j]["Coeff B"]
-                C2 = constraints[j]["Coeff C"]
+                A1 = constraints[i]["X"]
+                B1 = constraints[i]["Y"]
+                C1 = constraints[i]["C"]
+                A2 = constraints[j]["X"]
+                B2 = constraints[j]["Y"]
+                C2 = constraints[j]["C"]
 
                 det = A1 * B2 - A2 * B1
 
@@ -93,3 +92,68 @@ class Graphicmethod:
 
     def get_intersections(self):
         return self.intersections
+
+    def get_ordinal(self, number):
+        if 10 <= number % 100 <= 20:
+            suffix = 'th'
+        else:
+            suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(number % 10, 'th')
+        return f"{number}{suffix}"
+
+    def find_solution(self, option, func_obj, constraints):
+        print(f"OPCION SELECCIONADA {option}")
+        print(func_obj)
+        print(constraints)
+
+        if func_obj.get('Objective', None) == 'maximize':
+            problem = LpProblem("GM_problem", LpMaximize)
+            x1 = LpVariable("x1", 0)
+            x2 = LpVariable("x2", 0)
+            problem += func_obj['X'] * x1 + func_obj['Y'] * x2
+
+            for index, constraint in enumerate(constraints, start=1):
+                x_coeff = constraint['X']
+                y_coeff = constraint['Y']
+                equality = constraint['Equal']
+                constant = constraint['C']
+
+                constraint_name = f"{self.get_ordinal(index)} constraint"
+                if equality == '=':
+                    problem += x_coeff * x1 + y_coeff * x2 == constant, constraint_name
+                elif equality == '>=':
+                    problem += x_coeff * x1 + y_coeff * x2 >= constant, constraint_name
+                elif equality == '<=':
+                    problem += x_coeff * x1 + y_coeff * x2 <= constant, constraint_name
+            problem.solve()
+            message = ""
+            for v in problem.variables():
+                message += f"{v.name} = {v.varValue} \n"
+            message += f"The optimal value of the objective function is = {value(problem.objective)} "
+            return message
+        elif func_obj.get('Objective', None) == 'minimize':
+            problem = LpProblem("GM problem", LpMinimize)
+            x1 = LpVariable("x1", 0)
+            x2 = LpVariable("x2", 0)
+            problem += func_obj['X'] * x1 + func_obj['Y'] * x2
+
+            for index, constraint in enumerate(constraints, start=1):
+                x_coeff = constraint['X']
+                y_coeff = constraint['Y']
+                equality = constraint['Equal']
+                constant = constraint['C']
+
+                constraint_name = f"{self.get_ordinal(index)} constraint"
+                if equality == '=':
+                    problem += x_coeff * x1 + y_coeff * x2 == constant, constraint_name
+                elif equality == '>=':
+                    problem += x_coeff * x1 + y_coeff * x2 >= constant, constraint_name
+                elif equality == '<=':
+                    problem += x_coeff * x1 + y_coeff * x2 <= constant, constraint_name
+            problem.solve()
+            message = ""
+            for v in problem.variables():
+                message += f"{v.name} = {v.varValue} \n"
+            message += f"The optimal value of the objective function is = {value(problem.objective)} "
+            return message
+        else:
+            return "NO SE SOLUCIONO"
