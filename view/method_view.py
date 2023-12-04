@@ -47,8 +47,10 @@ class Vista:
         frame_table = tk.Frame(root, width=300, height=200)
         frame_table.pack()  # Expande el Frame al tamaño de la ventana
 
-        self.tree = ttk.Treeview(frame_table, columns=("Coeff A", "Coeff B", "Equal", "Coeff C"), show="headings")
+        self.tree = ttk.Treeview(frame_table, columns=("Coeff A", "Signo", "Coeff B", "Equal", "Coeff C"),
+                                 show="headings")
         self.tree.heading("Coeff A", text="Coeff A")
+        self.tree.heading("Signo", text="Signo")
         self.tree.heading("Coeff B", text="Coeff B")
         self.tree.heading("Equal", text="Equal")
         self.tree.heading("Coeff C", text="Coeff C")
@@ -81,39 +83,44 @@ class Vista:
         # Campos de entrada para la restricción
         coeff_a_entry = tk.Entry(restriction_window)
         coeff_b_entry = tk.Entry(restriction_window)
+        sign = ttk.Combobox(restriction_window, values=["+", "-"], state='readonly')
+
         equal_combobox = ttk.Combobox(restriction_window, values=["=", "<=", ">="], state='readonly')
         coeff_c_entry = tk.Entry(restriction_window)
 
         coeff_a_entry.grid(row=0, column=1)
-        coeff_b_entry.grid(row=1, column=1)
-        equal_combobox.grid(row=2, column=1)
-        coeff_c_entry.grid(row=3, column=1)
+        sign.grid(row=1, column=1)
+        coeff_b_entry.grid(row=2, column=1)
+        equal_combobox.grid(row=3, column=1)
+        coeff_c_entry.grid(row=4, column=1)
 
         tk.Label(restriction_window, text="Coeff A:").grid(row=0, column=0)
-        tk.Label(restriction_window, text="Coeff B:").grid(row=1, column=0)
-        tk.Label(restriction_window, text="Equal:").grid(row=2, column=0)
-        tk.Label(restriction_window, text="Coeff C:").grid(row=3, column=0)
+        tk.Label(restriction_window, text="Signo:").grid(row=1, column=0)
+        tk.Label(restriction_window, text="Coeff B:").grid(row=2, column=0)
+        tk.Label(restriction_window, text="Equal:").grid(row=3, column=0)
+        tk.Label(restriction_window, text="Coeff C:").grid(row=4, column=0)
 
         # Botón para cargar restricción en la tabla principal
         add_button = tk.Button(restriction_window, text="Añadir a la Tabla",
                                command=lambda: self.add_restriction_to_table(coeff_a_entry.get(), coeff_b_entry.get(),
                                                                              equal_combobox.get(), coeff_c_entry.get(),
-                                                                             restriction_window))
-        add_button.grid(row=4, column=0, columnspan=2)
+                                                                             sign.get(), restriction_window))
+        add_button.grid(row=5, column=0, columnspan=2)
 
-    def add_restriction_to_table(self, coeff_a, coeff_b, equal, coeff_c, window):
-        if not coeff_a or not coeff_b or not equal or not coeff_c:
+    def add_restriction_to_table(self, coeff_a, coeff_b, equal, coeff_c, sign, window):
+        if not coeff_a or not coeff_b or not equal or not coeff_c or not sign:
             self.show_rest_error("Todos los campos deben estar llenos")
         else:
             # Agregar los valores a la tabla
             constraint = {
                 "X": float(coeff_a),
+                "Sign": sign,
                 "Y": float(coeff_b),
                 "Equal": equal,
                 "C": float(coeff_c)
             }
             self.constraint_list.append(constraint)
-            self.tree.insert("", "end", values=(coeff_a, coeff_b, equal, coeff_c))
+            self.tree.insert("", "end", values=(coeff_a, sign, coeff_b, equal, coeff_c))
             # Cerrar la ventana emergente
             window.destroy()
 
@@ -157,6 +164,7 @@ class Vista:
         intersections = self.modelo.get_intersections()
         for constraint in self.constraint_list:
             coeff_a = constraint["X"]
+            sign = constraint["Sign"]
             coeff_b = constraint["Y"]
             coeff_c = constraint["C"]
             equal = constraint["Equal"]
@@ -168,7 +176,7 @@ class Vista:
                 x_vals = [min(x), max(x)]
                 y_vals = [(coeff_c - coeff_a * x) / coeff_b for x in x_vals]
 
-            plt.plot(x_vals, y_vals, label=f'{coeff_a}x + {coeff_b}y {equal} {coeff_c}')
+            plt.plot(x_vals, y_vals, label=f'{coeff_a}x {sign} {coeff_b}y {equal} {coeff_c}')
             plt.scatter(x_vals, y_vals, color='red', marker='o')  # Marcar puntos de las rectas
         intersection_x, intersection_y = zip(*intersections)
         plt.scatter(intersection_x, intersection_y, marker='x')

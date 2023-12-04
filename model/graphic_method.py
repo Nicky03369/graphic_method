@@ -1,4 +1,4 @@
-from pulp import *
+from pulp import LpProblem, LpVariable, value, LpMinimize, LpMaximize
 
 
 class Graphicmethod:
@@ -131,7 +131,7 @@ class Graphicmethod:
             message += f"The optimal value of the objective function is = {value(problem.objective)} "
             return message
         elif func_obj.get('Objective', None) == 'minimize':
-            problem = LpProblem("GM problem", LpMinimize)
+            problem = LpProblem("GM_problem", LpMinimize)
             x1 = LpVariable("x1", 0)
             x2 = LpVariable("x2", 0)
             problem += func_obj['X'] * x1 + func_obj['Y'] * x2
